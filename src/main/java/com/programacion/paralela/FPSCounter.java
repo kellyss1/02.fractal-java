@@ -1,6 +1,7 @@
 package com.programacion.paralela;
 
 public class FPSCounter {
+
     private int fps;
     private int frames;
     private long lastTime;
@@ -9,7 +10,6 @@ public class FPSCounter {
         lastTime = System.currentTimeMillis();
         fps = 0;
         frames = 0;
-
     }
 
     public int update() {

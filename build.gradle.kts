@@ -22,8 +22,15 @@ dependencies {
     implementation ("org.lwjgl", "lwjgl", classifier = lwjglNatives)
     implementation ("org.lwjgl", "lwjgl-glfw", classifier = lwjglNatives)
     implementation ("org.lwjgl", "lwjgl-opengl", classifier = lwjglNatives)
+
+    // Source: https://mvnrepository.com/artifact/com.github.jnr/jnr-ffi
+    implementation("com.github.jnr:jnr-ffi:2.2.19")
 }
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.withType<JavaExec> {
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
