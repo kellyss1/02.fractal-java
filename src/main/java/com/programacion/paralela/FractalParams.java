@@ -18,7 +18,7 @@ public class FractalParams {
 
     public static final int PALETTE_SIZE = 16;
 
-public static final int[] color_ramp = {
+    public static final int[] color_ramp = {
             0xFF000000,  // Negro
             0xFF000011,
             0xFF000022,
@@ -35,5 +35,24 @@ public static final int[] color_ramp = {
             0xFF0000DD,
             0xFF0000EE,
             0xFF0000FF   // Azul
+    };
+
+    public static final int[] color_ramp_parallel = {
+            0xFF000000,  // Negro
+            0xFF330033,  // Morado oscuro
+            0xFF440044,
+            0xFF550055,
+            0xFF660066,
+            0xFF770077,
+            0xFF880088,
+            0xFF990099,
+            0xFFAA00AA,
+            0xFFBB00BB,
+            0xFFCC00CC,
+            0xFFDD00DD,
+            0xFFEE00EE,
+            0xFFFF00FF,  // Magenta/Rosa fuerte
+            0xFFFF80FF,  // Rosa claro
+            0xFFFFB6C1   // Light Pink
     };
 }

@@ -8,6 +8,7 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.util.Objects;
 
 import org.lwjgl.*;
 import org.lwjgl.glfw.*;
@@ -27,23 +28,24 @@ public class FractalMain {
     private int overlayTextureID;
     private long window;
 
-    private IntBuffer pixelBuffer;
+    private final IntBuffer pixelBuffer;
 
-    private GLFWErrorCallback errorCallback;
     private GLFWKeyCallback keyCallback;
 
 
     FractalCpu fractalCpu;
     FractalSimd fractalSimd;
+    FractalParallel fractalParallel;
 
     FPSCounter fpsCounter;
 
-    int modo = 1; //1: CPU, 2: simd
+    int modo = 1; //1: CPU, 2: simd, 3: parallel
 
 
     public FractalMain() {
         fractalCpu = new FractalCpu();
         fractalSimd = new FractalSimd();
+        fractalParallel = new FractalParallel();
         fpsCounter = new FPSCounter();
 
         pixelBuffer = BufferUtils.createIntBuffer(FractalParams.WIDTH * FractalParams.HEIGHT);
@@ -60,12 +62,13 @@ public class FractalMain {
         glfwDestroyWindow(window);
 
         glfwTerminate();
-        glfwSetErrorCallback(null).free();
+        Objects.requireNonNull(glfwSetErrorCallback(null)).free();
+        //glfwSetErrorCallback(null).free();
     }
 
     private void init() {
 
-        errorCallback = GLFWErrorCallback.createPrint(System.err).set();
+        GLFWErrorCallback errorCallback = GLFWErrorCallback.createPrint(System.err).set();
 
         if ( !glfwInit() )
             throw new IllegalStateException("Unable to initialize GLFW");
@@ -99,10 +102,15 @@ public class FractalMain {
                 modo=2;
                 fractalSimd = new FractalSimd();
             }
+            else if (key==GLFW_KEY_3 && action==GLFW_RELEASE) {
+                System.out.println("Modo Java Multi-thread (" + fractalParallel.getNumThreads() + " cores)");
+                modo=3;
+            }
 
 
         });
         GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+        assert vidmode != null;
         glfwSetWindowPos(window,
                 (vidmode.width()-FractalParams.WIDTH)/2,
                 (vidmode.height()-FractalParams.HEIGHT)/2
@@ -207,6 +215,10 @@ public class FractalMain {
             fractalSimd.juliaSimd();
             pixelBuffer.put(fractalSimd.pixelBuffer.asIntBuffer());
         }
+        else if (modo==3){
+            fractalParallel.julia_parallel(FractalParams.xMin,FractalParams.yMin,FractalParams.xMax,FractalParams.yMax,FractalParams.WIDTH,FractalParams.HEIGHT);
+            pixelBuffer.put(fractalParallel.pixel_buffer);
+        }
 
         pixelBuffer.flip();
 
@@ -250,10 +262,16 @@ public class FractalMain {
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g.setColor(Color.WHITE);
             g.setFont(new Font("SansSerif", Font.BOLD, 24));
-            g.drawString("Julia Set | Iteraciones: " + FractalParams.max_iteraciones + " | FPS: " + fps + " | Mode: Serial 2", 10, 28);
+            String modeName = switch (modo) {
+                case 1 -> "Serial Java";
+                case 2 -> "SIMD C++";
+                case 3 -> "Parallel (" + fractalParallel.getNumThreads() + " cores)";
+                default -> "Desconocido";
+            };
+            g.drawString("Julia Set | Iteraciones: " + FractalParams.max_iteraciones + " | FPS: " + fps + " | Mode: " + modeName, 10, 28);
 
             g.setFont(new Font("SansSerif", Font.BOLD, 20));
-            g.drawString("Options: [Up/Down] Change Iterations | [Esc] Exit", 10, FractalParams.HEIGHT - 20);
+            g.drawString("Options: [1-3] Mode | [Up/Down] Iterations | [Esc] Exit", 10, FractalParams.HEIGHT - 20);
         } finally {
             g.dispose();
         }
